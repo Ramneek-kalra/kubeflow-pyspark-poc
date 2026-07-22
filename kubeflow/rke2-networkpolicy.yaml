@@ -1,0 +1,26 @@
+# RKE2 Canal enforces NetworkPolicy. This permits traffic from RKE2 system
+# components and local port-forward paths to the Kubeflow Istio gateway.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-rke2-system-to-istio-gateway
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      app: istio-ingressgateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8443

@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Resource-conscious Kubeflow platform for this POC:
+# - authentication: Istio, Dex, oauth2-proxy
+# - platform: Dashboard, Profiles, Notebooks v1
+# - ML experiments: Katib
+#
+# Deliberately absent:
+# - Spark Operator (manual follow-up)
+# - Jupyter Enterprise Gateway (manual follow-up)
+# - Pipelines (KFP 2.16.1 API/UI images are amd64-only and unstable under
+#   QEMU on Apple Silicon)
+# - KServe/Knative, Trainer, Hub, Workspaces v2
+#   (not needed for the PySpark execution POC)
+resources:
+  - ../common/cert-manager/base
+  - ../common/cert-manager/overlays/kubeflow
+  - ../common/istio/istio-crds/base
+  - ../common/istio/istio-namespace/base
+  - ../common/istio/istio-install/overlays/oauth2-proxy
+  - ../common/oauth2-proxy/overlays/m2m-dex-only
+  - ../common/dex/overlays/oauth2-proxy
+  - ../common/istio/cluster-local-gateway/base
+  - ../common/kubeflow-namespace/base
+  - ../common/kubeflow-roles/base
+  - ../common/istio/kubeflow-istio-resources/base
+  - ../applications/katib/upstream/installs/katib-with-kubeflow
+  - ../applications/dashboard/overlays/istio
+  - ../applications/notebooks-v1/overlays/istio
+  - ../common/user-namespace/base

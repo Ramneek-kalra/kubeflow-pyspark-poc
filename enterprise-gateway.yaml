@@ -1,0 +1,22 @@
+global:
+  rbac: true
+
+image: elyra/enterprise-gateway:3.2.3
+imagePullPolicy: Always
+logLevel: DEBUG
+
+kernel:
+  shareGatewayNamespace: true
+  launchTimeout: 300
+  cullIdleTimeout: 3600
+  allowedKernels:
+    - spark_python_operator
+    - python3
+  defaultKernelName: spark_python_operator
+
+kip:
+  enabled: false
+  image: elyra/kernel-image-puller:3.2.3
+  imagePullPolicy: Always
+  pullPolicy: Always
+  defaultContainerRegistry: quay.io

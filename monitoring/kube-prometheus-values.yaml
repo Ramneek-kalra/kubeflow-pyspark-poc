@@ -1,0 +1,137 @@
+# Lightweight kube-prometheus-stack for the ARM64 Kubeflow POC.
+# Scoped for Profile-namespace dashboards rather than full cluster SRE.
+
+fullnameOverride: kps
+
+defaultRules:
+  create: false
+
+alertmanager:
+  enabled: false
+
+prometheusOperator:
+  enabled: true
+  admissionWebhooks:
+    enabled: false
+    patch:
+      enabled: false
+  tls:
+    enabled: false
+  nodeSelector:
+    poc.local/workload: kubeflow
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    retention: 6h
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    nodeSelector:
+      poc.local/workload: kubeflow
+    resources:
+      requests:
+        cpu: 100m
+        memory: 384Mi
+      limits:
+        cpu: 500m
+        memory: 768Mi
+    storageSpec: {}
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    # Keep scrape surface small on this single-worker POC.
+    additionalScrapeConfigs: []
+
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: admin
+  defaultDashboardsEnabled: false
+  defaultDashboardsTimezone: browser
+  ingress:
+    enabled: false
+  service:
+    type: ClusterIP
+    port: 80
+  grafana.ini:
+    server:
+      domain: localhost:8081
+      root_url: http://localhost:8081/grafana/
+      serve_from_sub_path: true
+    auth.anonymous:
+      enabled: true
+      org_name: Main Org.
+      org_role: Viewer
+    users:
+      viewers_can_edit: false
+    security:
+      allow_embedding: true
+      cookie_samesite: disabled
+      cookie_secure: false
+  nodeSelector:
+    poc.local/workload: kubeflow
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: ALL
+      folderAnnotation: grafana_folder
+    datasources:
+      enabled: true
+kube-state-metrics:
+  enabled: true
+  nodeSelector:
+    poc.local/workload: kubeflow
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+
+nodeExporter:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+kubeApiServer:
+  enabled: false
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+
+kubeEtcd:
+  enabled: false
+
+coreDns:
+  enabled: false
+
+kubelet:
+  enabled: true
+  serviceMonitor:
+    https: true
+    cAdvisor: true
+    probes: false
+    resource: true

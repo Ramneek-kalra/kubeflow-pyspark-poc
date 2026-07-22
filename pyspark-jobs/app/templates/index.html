@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}PySpark Jobs · {{ namespace }}{% endblock %}
+{% block content %}
+<section class="panel">
+  <h2>Submit a Python job</h2>
+  <form action="{{ base_path }}/jobs" method="post" enctype="multipart/form-data">
+    <label>
+      Job name
+      <input name="name" required pattern="[A-Za-z0-9][A-Za-z0-9_.-]*" maxlength="63"
+             placeholder="customer-etl">
+    </label>
+    <label>
+      Python file
+      <input name="file" type="file" accept=".py,text/x-python" required>
+    </label>
+    <label class="wide">
+      Arguments
+      <input name="arguments" placeholder="--input /data/input --date 2026-07-22">
+    </label>
+    <fieldset>
+      <legend>Driver</legend>
+      <label>Cores <input name="driver_cores" type="number" min="1" max="4" value="1"></label>
+      <label>Memory <input name="driver_memory" value="512m"></label>
+    </fieldset>
+    <fieldset>
+      <legend>Executors</legend>
+      <label>Cores <input name="executor_cores" type="number" min="1" max="4" value="1"></label>
+      <label>Memory <input name="executor_memory" value="512m"></label>
+      <label>Instances <input name="executor_instances" type="number" min="1" max="10" value="1"></label>
+    </fieldset>
+    <button type="submit">Submit PySpark job</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="section-heading">
+    <h2>Jobs</h2>
+    <a class="button secondary" href="{{ base_path }}/">Refresh</a>
+  </div>
+  {% if jobs %}
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Status</th><th>Created</th><th>Driver</th></tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td><a href="{{ base_path }}/jobs/{{ job.name }}">{{ job.name }}</a></td>
+        <td><span class="state state-{{ job.state|lower }}">{{ job.state }}</span></td>
+        <td>{{ job.created }}</td>
+        <td>{{ job.driver_pod or "Pending" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No PySpark jobs have been submitted in this Profile.</p>
+  {% endif %}
+</section>
+{% endblock %}

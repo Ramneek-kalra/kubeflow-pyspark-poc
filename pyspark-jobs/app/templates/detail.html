@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ job.name }} · PySpark Jobs{% endblock %}
+{% block content %}
+<nav><a href="{{ base_path }}/">← All jobs</a></nav>
+
+<section class="panel">
+  <div class="section-heading">
+    <div>
+      <h2>{{ job.name }}</h2>
+      <span class="state state-{{ job.state|lower }}">{{ job.state }}</span>
+    </div>
+    <form action="{{ base_path }}/jobs/{{ job.name }}/delete" method="post"
+          onsubmit="return confirm('Delete {{ job.name }}?')">
+      <button class="danger" type="submit">Delete job</button>
+    </form>
+  </div>
+  <dl>
+    <dt>Created</dt><dd>{{ job.created }}</dd>
+    <dt>Driver pod</dt><dd>{{ job.driver_pod or "Not created" }}</dd>
+    <dt>Uploaded file</dt><dd>{{ job.file_path or "Unknown" }}</dd>
+  </dl>
+  {% if job.error %}<pre class="error">{{ job.error }}</pre>{% endif %}
+  <div class="actions">
+    <a class="button" href="{{ base_path }}/jobs/{{ job.name }}/logs" target="_blank">Driver logs</a>
+    {% if job.spark_ui_service %}
+    <a class="button" href="{{ base_path }}/jobs/{{ job.name }}/spark-ui/" target="_blank">Spark UI</a>
+    {% endif %}
+    <a class="button secondary" href="{{ base_path }}/jobs/{{ job.name }}">Refresh</a>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Events</h2>
+  {% if events %}
+  <table>
+    <thead><tr><th>Time</th><th>Type</th><th>Reason</th><th>Message</th></tr></thead>
+    <tbody>
+      {% for event in events %}
+      <tr>
+        <td>{{ event.time }}</td>
+        <td>{{ event.type }}</td>
+        <td>{{ event.reason }}</td>
+        <td>{{ event.message }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No Kubernetes events are available yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

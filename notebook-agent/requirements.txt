@@ -1,0 +1,9 @@
+# JupyterLab-native agent UI and notebook MCP tools.
+jupyter-ai==3.0.1
+
+# Keep notebook source reviewable and agent-friendly.
+jupytext==1.18.1
+jupyterlab-git>=0.53.0,<0.54.0
+
+# Local smoke tests and agent-generated PySpark scripts.
+pyspark==3.5.5

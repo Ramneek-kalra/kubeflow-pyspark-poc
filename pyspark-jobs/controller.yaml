@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pyspark-jobs-controller
+  namespace: kubeflow
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pyspark-jobs-controller
+rules:
+  - apiGroups: ["kubeflow.org"]
+    resources: ["profiles"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "events"
+      - "persistentvolumeclaims"
+      - "pods"
+      - "serviceaccounts"
+      - "services"
+    verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources: ["sparkapplications"]
+    verbs: ["create", "delete", "get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["create", "get", "list", "patch", "update"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["create", "get", "list", "patch", "update"]
+  - apiGroups: ["networking.istio.io"]
+    resources: ["virtualservices"]
+    verbs: ["create", "get", "list", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pyspark-jobs-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pyspark-jobs-controller
+subjects:
+  - kind: ServiceAccount
+    name: pyspark-jobs-controller
+    namespace: kubeflow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pyspark-jobs-controller
+  namespace: kubeflow
+  labels:
+    app.kubernetes.io/name: pyspark-jobs-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pyspark-jobs-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pyspark-jobs-controller
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: pyspark-jobs-controller
+      nodeSelector:
+        poc.local/workload: kubeflow
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: controller
+          image: ${PYSPARK_JOBS_IMAGE}
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "pyspark_jobs.controller"]
+          env:
+            - name: JOBS_IMAGE
+              value: ${PYSPARK_JOBS_IMAGE}
+            - name: STORAGE_CLASS
+              value: local-path
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

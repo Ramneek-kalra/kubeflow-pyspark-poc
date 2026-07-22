@@ -1,0 +1,17 @@
+# Spark Operator 2.5.1 values for Kubeflow Profile workloads.
+#
+# Profile namespaces are labeled by the Kubeflow Profile controller with:
+#   app.kubernetes.io/part-of=kubeflow-profile
+#
+# Enterprise Gateway is retained explicitly for remote Spark kernels.
+spark:
+  jobNamespaces:
+    - enterprise-gateway
+  jobNamespaceSelector: app.kubernetes.io/part-of=kubeflow-profile
+
+controller:
+  uiService:
+    enable: true
+
+webhook:
+  enable: true
